@@ -1,0 +1,10 @@
+Installation
+============
+
+Ubuntu 14.04
+------------
+Installer MapMap
+
+sudo apt-get install pd-osc puredata lunch
+
+
