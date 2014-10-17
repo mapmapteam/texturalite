@@ -1,5 +1,6 @@
 #!/usr/bin/env lunch
 osc = "/usr/lib/pd/extra/osc"
 iemnet = "/usr/lib/pd/extra/iemnet"
-add_command("pd -path %s -helppath %s -path %s -helppath %s ~/src/texturalite/pd/vj.pd" % (osc, osc, iemnet, iemnet))
-add_command("~/src/mapmap/mapmap")
+add_command("pd -path %s -helppath %s -path %s -helppath %s ~/src/texturalite/pd/vj.pd" % (osc, osc, iemnet, iemnet), sleep_after=5.0)
+add_command("~/src/mapmap/mapmap --file ~/src/texturalite/mapmap/vj.mmp --fullscreen")
+
