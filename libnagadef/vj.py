@@ -40,12 +40,11 @@ class UrnRandom(object):
 
     def reset(self):
         self._elements = range(self._size)
-        random.shuffle(self._elements)
+        self._elements = random.shuffle(self._elements)
 
     def pick(self):
         if self._size == 0:
             return None
-        print(self.__dict__)
         if len(self._elements) == 0:
             self.reset()
         ret = self._elements[0]
