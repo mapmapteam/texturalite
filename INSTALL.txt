@@ -3,8 +3,13 @@ Installation
 
 Ubuntu 14.04
 ------------
-Installer MapMap
+Installer MapMap, branche develop
 
-sudo apt-get install pd-osc puredata lunch
+sudo apt-get install python-yaml python-twisted python-txosc
+
+
+Deprecated instructions
+-----------------------
+sudo apt-get install pd-osc puredata lunch pd-zexy pd-iem
 
 

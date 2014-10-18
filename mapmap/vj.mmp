@@ -3,7 +3,7 @@
 <project version="0.1">
     <paints>
         <paint id="0" name="" type="media">
-            <uri>/home/aalex/actif/pds-ker-thiossane/tissu-alex-slomo/MVI_1241.MOV</uri>
+            <uri>/home/aalex/Videos/MVI_1213.MOV</uri>
             <x>-1.5</x>
             <y>-14.5</y>
         </paint>
@@ -12,10 +12,10 @@
         <mapping id="0" paint_id="0" type="mesh_texture">
             <destination shape="mesh">
                 <dimensions columns="2" rows="2"/>
-                <vertex x="52" y="62"/>
-                <vertex x="359" y="54"/>
-                <vertex x="36" y="311"/>
-                <vertex x="359" y="321"/>
+                <vertex x="70" y="46"/>
+                <vertex x="377" y="38"/>
+                <vertex x="54" y="295"/>
+                <vertex x="377" y="305"/>
             </destination>
             <source shape="mesh">
                 <dimensions columns="2" rows="2"/>

@@ -1,0 +1,8 @@
+directory: ~/Videos
+videos:
+  - uri: MVI_1214.MOV
+    duration: 1.0
+  - uri: MVI_1212.MOV
+    duration: 2.0
+  - uri: MVI_1213.MOV
+    duration: 2.0

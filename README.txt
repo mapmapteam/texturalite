@@ -21,5 +21,5 @@ Lancement
 
 lunch -g
 
-
+./nagadef sample_config.yaml
 
