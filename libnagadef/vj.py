@@ -28,6 +28,8 @@ import sys
 from twisted.internet import reactor
 from twisted.internet import task
 import random
+from txosc import async
+from txosc import osc
 
 class UrnRandom(object):
     """
@@ -40,7 +42,7 @@ class UrnRandom(object):
 
     def reset(self):
         self._elements = range(self._size)
-        self._elements = random.shuffle(self._elements)
+        random.shuffle(self._elements)
 
     def pick(self):
         if self._size == 0:
@@ -69,6 +71,11 @@ class VeeJay(object):
         self._current_cue_index = -1 # Initial non-existing cue
         self._urn = UrnRandom()
         self._init_urn()
+        self._osc_port = 12345
+        self._osc_host = "localhost"
+        self._client_proto = None
+        self._client_port = None
+        self._init_osc()
 
     def _init_urn(self):
         num = len(self.get_cues())
@@ -85,5 +92,30 @@ class VeeJay(object):
         video_cue = self.get_cues()[index]
         reactor.callLater(video_cue.duration, self.play_next)
 
-        print("TODO: send OSC message to play %s" % (video_cue.uri))
+        print("play %s" % (video_cue.uri))
+        message = self._create_play_message(video_cue.uri)
+        self._send_osc(message)
+
+    def _init_osc(self, port=12345, host="localhost"):
+        self._client_proto = async.DatagramClientProtocol()
+        self._client_port = reactor.listenUDP(0, self._client_proto)
+
+    def _create_play_message(self, uri):
+        path = "/mapmap/paint/media/load"
+        mapping_index = 0
+        message = osc.Message(path)
+        message.add(mapping_index)
+        message.add(str(uri))
+        return message
+
+    def _send_osc(self, message):
+        """
+        Sends a message using UDP and stops the Reactor
+        @param message: OSC message
+        @type message: L{txosc.osc.Message}
+        @type port: C{int}
+        @type host: C{str}
+        """
+        self._client_proto.send(message, (self._osc_host, self._osc_port))
+        #print("Sent %s to %s:%d" % (message, self._osc_host, self._osc_port))
 
