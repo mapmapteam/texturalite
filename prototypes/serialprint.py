@@ -108,6 +108,9 @@ class Application(object):
         # if the arduino is connected:
 
         if self._timer.elapsed() >= 1.0:
+            # send read
+            self.send_read_hands()
+
             # toggle motor
             self._capsule["motor"] = not self._capsule["motor"]
             self.set_motor(self._capsule["motor"])
@@ -150,6 +153,9 @@ class Application(object):
             self.send_to_arduino("F")
         else:
             self.send_to_arduino("f")
+
+    def send_read_hands(self):
+        self.send_to_arduino("R")
 
     def send_to_arduino(self, txt):
         #data = "%s\n" % (txt)
