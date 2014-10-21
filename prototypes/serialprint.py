@@ -39,9 +39,9 @@ class CliOptions(usage.Options):
         ['port', 'p', '/dev/ttyUSB0', 'Serial port to use'],]
 
 
-class Echo(LineReceiver):
+class ArduinoSerialProtocol(LineReceiver):
     """
-    Prints the data received from the arduino
+    Handles the data received from the arduino, and write to it, too.
     """
     def __init__(self, app):
         self._app = app
@@ -86,7 +86,7 @@ class Application(object):
         try:
             #logging.debug('About to open port %s' % serial_port)
             print('About to open port %s' % serial_port)
-            self._serial = SerialPort(Echo(self), serial_port, reactor, baudrate=baudrate)
+            self._serial = SerialPort(ArduinoSerialProtocol(self), serial_port, reactor, baudrate=baudrate)
             print('Success opening port %s' % serial_port)
         except serial.serialutil.SerialException, e:
             print('Failed opening port %s' % serial_port)
