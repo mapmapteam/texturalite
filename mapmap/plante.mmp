@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapmap>
+<project version="0.1">
+    <paints>
+        <paint id="0" name="" type="media">
+            <uri>/home/aalex/Videos/MVI_1213.MOV</uri>
+            <x>-1.5</x>
+            <y>-14.5</y>
+        </paint>
+        <paint id="1" name="" type="color">
+            <rgb>#000000</rgb>
+        </paint>
+    </paints>
+    <mappings>
+        <mapping id="0" paint_id="0" type="mesh_texture">
+            <destination shape="mesh">
+                <dimensions columns="2" rows="2"/>
+                <vertex x="272" y="-48"/>
+                <vertex x="1143" y="100"/>
+                <vertex x="250" y="798"/>
+                <vertex x="1021" y="798"/>
+            </destination>
+            <source shape="mesh">
+                <dimensions columns="2" rows="2"/>
+                <vertex x="-1.5" y="-14.5"/>
+                <vertex x="638.5" y="-14.5"/>
+                <vertex x="-1.5" y="465.5"/>
+                <vertex x="638.5" y="465.5"/>
+            </source>
+        </mapping>
+        <mapping id="1" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="233" y="-4"/>
+                <vertex x="607" y="-6"/>
+                <vertex x="607" y="89"/>
+                <vertex x="248" y="549"/>
+            </destination>
+        </mapping>
+        <mapping id="2" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="338" y="208"/>
+                <vertex x="532" y="165"/>
+                <vertex x="530" y="343"/>
+                <vertex x="305" y="424"/>
+            </destination>
+        </mapping>
+        <mapping id="3" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="299" y="439"/>
+                <vertex x="482" y="240"/>
+                <vertex x="463" y="349"/>
+                <vertex x="378" y="490"/>
+            </destination>
+        </mapping>
+        <mapping id="4" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="636" y="-33"/>
+                <vertex x="929" y="47"/>
+                <vertex x="826" y="279"/>
+                <vertex x="788" y="159"/>
+            </destination>
+        </mapping>
+        <mapping id="5" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="816" y="238"/>
+                <vertex x="905" y="242"/>
+                <vertex x="865" y="283"/>
+                <vertex x="793" y="342"/>
+            </destination>
+        </mapping>
+        <mapping id="6" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="850" y="-130"/>
+                <vertex x="1325" y="-130"/>
+                <vertex x="1371" y="252"/>
+                <vertex x="813" y="311"/>
+            </destination>
+        </mapping>
+        <mapping id="7" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="199" y="590"/>
+                <vertex x="573" y="571"/>
+                <vertex x="527" y="838"/>
+                <vertex x="190" y="834"/>
+            </destination>
+        </mapping>
+        <mapping id="8" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="851" y="552"/>
+                <vertex x="1092" y="514"/>
+                <vertex x="1023" y="827"/>
+                <vertex x="871" y="836"/>
+            </destination>
+        </mapping>
+        <mapping id="9" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="760" y="624"/>
+                <vertex x="866" y="667"/>
+                <vertex x="873" y="875"/>
+                <vertex x="741" y="761"/>
+            </destination>
+        </mapping>
+        <mapping id="10" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="905" y="242"/>
+                <vertex x="1114" y="213"/>
+                <vertex x="1108" y="500"/>
+                <vertex x="997" y="424"/>
+            </destination>
+        </mapping>
+        <mapping id="11" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="541" y="681"/>
+                <vertex x="629" y="644"/>
+                <vertex x="664" y="793"/>
+                <vertex x="508" y="810"/>
+            </destination>
+        </mapping>
+        <mapping id="12" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="253" y="442"/>
+                <vertex x="390" y="444"/>
+                <vertex x="369" y="504"/>
+                <vertex x="189" y="548"/>
+            </destination>
+        </mapping>
+        <mapping id="13" paint_id="1" type="quad_color">
+            <destination shape="quad">
+                <vertex x="240" y="526"/>
+                <vertex x="410" y="553"/>
+                <vertex x="393" y="644"/>
+                <vertex x="210" y="612"/>
+            </destination>
+        </mapping>
+    </mappings>
+</project>
