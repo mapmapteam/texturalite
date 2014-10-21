@@ -7,12 +7,11 @@ Date: 2014
 Dependencies: python-twisted python-serial
 """
 import logging
-from twisted.protocols.basic import LineReceiver
+import sys
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 from twisted.internet.serialport import SerialPort
 from twisted.python import usage
-import thread
 
 
 class CliOptions(usage.Options):
