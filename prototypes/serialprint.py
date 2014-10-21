@@ -8,19 +8,13 @@ Dependencies: python-twisted python-serial
 """
 import logging
 import sys
+import serial
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
-from twisted.internet import protocol
+from twisted.internet import task
 from twisted.internet.serialport import SerialPort
 from twisted.python import usage
 
-def setBit(v, index, x):
-    """Set the index:th bit of v to x, and return the new value."""
-    mask = 1 << index
-    v &= ~mask
-    if x:
-        v |= mask
-    return v
 
 class CliOptions(usage.Options):
     """
@@ -31,40 +25,18 @@ class CliOptions(usage.Options):
         ['port', 'p', '/dev/ttyACM0', 'Serial port to use'],]
 
 
-class Capsule:
-    """
-    Representation of the capsule
-    """
-
-    def __init__(self, comm):
-        self.motor = False
-        self.fan   = False
-        self.comm  = comm
-    
-    def setMotor(self, motorValue):
-        self.sendMessage(0, motorValue, self.fan);
-
-    def setFan(self, fanValue):
-        self.sendMessage(0, self.motor, fanValue);
-
-    def sendMessage(self, msgType, msgMotor, msgFan):
-        msg = 0
-        msg = setBit(msg, 0, msgType)
-        msg = setBit(msg, 1, msgMotor)
-        msg = setBit(msg, 2, msgFan)
-        self.motor = msgMotor
-        self.fan   = msgFan
-        self.comm.write(msg)
-
-class Echo(SerialPort):
+class Echo(LineReceiver):
     """
     Prints the data received from the arduino
     """
-
-    def __init__(self):
-        self.capsule = Capsule(self);
+    def __init__(self, app):
+        self._app = app
 
     def processData(self, data):
+        if data == "y":
+            self._app.set_hand_connected(True)
+        elif data == "n":
+            self._app.set_hand_connected(False)
         print(data)
 
     def lineReceived(self, line):
@@ -77,11 +49,79 @@ class Echo(SerialPort):
             return
 
     def connectionMade(self):
-        reactor.callLater(0, self.doSomething)
+        self._app.connection_made_cb()
 
-    def doSomething(self):
-        self.capsule.setMotor(not self.capsule.motor);
-        reactor.callLater(1000, self.doSomething)
+
+class Application(object):
+    """
+    Our main logic.
+    """
+    def __init__(self, baudrate, serial_port):
+        """
+        Constructor.
+        """
+        self._arduino_connected = False
+        # Stores the state of the capsule.
+        self._capsule = {
+            "hands": False,
+            "motor": False,
+            "fan": False,
+            }
+        logging.debug('About to open port %s' % serial_port)
+        try:
+            self._serial = SerialPort(Echo(self), serial_port, reactor, baudrate=baudrate)
+        except serial.serialutil.SerialException, e:
+            print(e)
+            sys.exit(1)
+        self._looping_call = task.LoopingCall(self._looping_call_cb)
+        self._looping_call.start(50, now=False)
+
+    def _looping_call_cb(self):
+        """
+        Called at a regular interval.
+        """
+        if not self._arduino_connected:
+            return
+        # if the arduino is connected:
+
+        # toggle motor
+        self._capsule["motor"] = not self._capsule["motor"]
+        self.set_motor(self._capsule["motor"])
+
+        # toggle fan
+        self._capsule["fan"] = not self._capsule["fan"]
+        self.set_fan(self._capsule["fan"])
+
+        print("%s" % (self._capsule))
+
+
+    def set_hand_connected(self, is_connected):
+        self._capsule["hands"] = is_connected
+        if is_connected:
+            print("yes")
+        else:
+            print("no")
+
+    def connection_made_cb(self):
+        self._arduino_connected = True
+
+    def set_motor(self, is_enabled):
+        """
+        Turn on or off the motor.
+        """
+        if is_enabled:
+            self._serial.sendLine("M")
+        else:
+            self._serial.sendLine("m")
+
+    def set_fan(self, is_enabled):
+        """
+        Turn on or off the fan.
+        """
+        if is_enabled:
+            self._serial.sendLine("F")
+        else:
+            self._serial.sendLine("f")
 
 
 def run():
@@ -94,12 +134,10 @@ def run():
     except usage.UsageError, errortext:
         logging.error('%s %s' % (sys.argv[0], errortext))
         logging.info('Try %s --help for usage details' % sys.argv[0])
-        raise SystemExit, 1
-
+        sys.exit(1)
     baudrate = o.opts['baudrate']
     port = o.opts['port']
-    logging.debug('About to open port %s' % port)
-    s = SerialPort(Echo(), port, reactor, baudrate=baudrate)
+    app = Application(baudrate, port)
     reactor.run()
 
 
