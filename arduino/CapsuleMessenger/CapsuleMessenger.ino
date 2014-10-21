@@ -1,12 +1,14 @@
 #include <Messenger.h>
 
+// Constants: (pins)
 #define MOTOR_OUT 13
 #define FAN_OUT   12
-
 #define HANDS_IN   3
 
+// Constants: (baud rate)
 #define BAUD_RATE 115200
 
+// Constants: (messaging protocol - ASCII characters plus new lines)
 #define MSG_TYPE_READ      'R'
 #define MSG_TYPE_MOTOR_ON  'M'
 #define MSG_TYPE_MOTOR_OFF 'm'
@@ -18,24 +20,38 @@
 Messenger messenger('\n');
 
 // Create the callback function
-void messageReady() {
+void messageReady()
+{
   // Loop through all the available elements of the message
-  while ( messenger.available() ) {
+  while (messenger.available())
+  {
     char c = messenger.readChar();
     Serial.println(c);
-    switch (c) {
-      case MSG_TYPE_MOTOR_ON :  digitalWrite(MOTOR_OUT, HIGH); break;
-      case MSG_TYPE_MOTOR_OFF : digitalWrite(MOTOR_OUT, LOW); break;
-      case MSG_TYPE_FAN_ON :  digitalWrite(FAN_OUT, HIGH); break;
-      case MSG_TYPE_FAN_OFF : digitalWrite(FAN_OUT, LOW); break;
-      case MSG_TYPE_READ :
-      default :
+    switch (c)
+    {
+      case MSG_TYPE_MOTOR_ON:
+        digitalWrite(MOTOR_OUT, HIGH);
+        break;
+      case MSG_TYPE_MOTOR_OFF:
+        digitalWrite(MOTOR_OUT, LOW);
+        break;
+      case MSG_TYPE_FAN_ON:
+        digitalWrite(FAN_OUT, HIGH);
+        break;
+      case MSG_TYPE_FAN_OFF:
+        digitalWrite(FAN_OUT, LOW);
+        break;
+      case MSG_TYPE_READ:
         Serial.println(digitalRead(HANDS_IN) == HIGH ? MSG_HANDS_ON : MSG_HANDS_OFF);
+        break;
+      default :
+        break;
     }
   }
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(BAUD_RATE);
   
   messenger.attach(messageReady);
@@ -45,7 +61,11 @@ void setup() {
   pinMode(HANDS_IN,  INPUT);
 }
 
-void loop() {
-  while ( Serial.available() )  messenger.process(Serial.read());
+void loop()
+{
+  while (Serial.available())
+  {
+    messenger.process(Serial.read());
+  }
 }
 
