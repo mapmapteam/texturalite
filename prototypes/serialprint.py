@@ -10,9 +10,17 @@ import logging
 import sys
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
+from twisted.internet import protocol
 from twisted.internet.serialport import SerialPort
 from twisted.python import usage
 
+def setBit(v, index, x):
+    """Set the index:th bit of v to x, and return the new value."""
+    mask = 1 << index
+    v &= ~mask
+    if x:
+        v |= mask
+    return v
 
 class CliOptions(usage.Options):
     """
@@ -23,10 +31,39 @@ class CliOptions(usage.Options):
         ['port', 'p', '/dev/ttyACM0', 'Serial port to use'],]
 
 
-class Echo(LineReceiver):
+class Capsule:
+    """
+    Representation of the capsule
+    """
+
+    def __init__(self, comm):
+        self.motor = False
+        self.fan   = False
+        self.comm  = comm
+    
+    def setMotor(self, motorValue):
+        self.sendMessage(0, motorValue, self.fan);
+
+    def setFan(self, fanValue):
+        self.sendMessage(0, self.motor, fanValue);
+
+    def sendMessage(self, msgType, msgMotor, msgFan):
+        msg = 0
+        msg = setBit(msg, 0, msgType)
+        msg = setBit(msg, 1, msgMotor)
+        msg = setBit(msg, 2, msgFan)
+        self.motor = msgMotor
+        self.fan   = msgFan
+        self.comm.write(msg)
+
+class Echo(SerialPort):
     """
     Prints the data received from the arduino
     """
+
+    def __init__(self):
+        self.capsule = Capsule(self);
+
     def processData(self, data):
         print(data)
 
@@ -38,6 +75,13 @@ class Echo(LineReceiver):
         except ValueError:
             logging.error('Unable to parse data %s' % line)
             return
+
+    def connectionMade(self):
+        reactor.callLater(0, self.doSomething)
+
+    def doSomething(self):
+        self.capsule.setMotor(not self.capsule.motor);
+        reactor.callLater(1000, self.doSomething)
 
 
 def run():
