@@ -16,6 +16,9 @@ from twisted.internet import task
 from twisted.internet.serialport import SerialPort
 from twisted.python import usage
 
+#VERBOSE = True
+VERBOSE = False
+
 class Timer(object):
     """
     Returns elapsed time.
@@ -51,7 +54,8 @@ class ArduinoSerialProtocol(LineReceiver):
             self._app.set_hand_connected(True)
         elif data == "n":
             self._app.set_hand_connected(False)
-        print("Received %s" % (data))
+        if VERBOSE:
+            print("Received %s" % (data))
 
     def lineReceived(self, line):
         try:
@@ -75,8 +79,9 @@ class Application(object):
         Constructor.
         """
         self._serial = None
+        self.READ_INTERVAL = 0.050 # seconds
         self._arduino_connected = False
-        self._timer = Timer()
+        self._print_timer = Timer()
         # Stores the state of the capsule.
         self._capsule = {
             "hands": False,
@@ -85,7 +90,8 @@ class Application(object):
             }
         try:
             #logging.debug('About to open port %s' % serial_port)
-            print('About to open port %s' % serial_port)
+            if VERBOSE:
+                print('About to open port %s' % serial_port)
             self._serial = SerialPort(ArduinoSerialProtocol(self), serial_port, reactor, baudrate=baudrate)
             print('Success opening port %s' % serial_port)
         except serial.serialutil.SerialException, e:
@@ -93,9 +99,10 @@ class Application(object):
             print(e)
             sys.exit(1)
 
-        print("start task")
+        if VERBOSE:
+            print("start task")
         self._looping_call = task.LoopingCall(self._looping_call_cb)
-        self._looping_call.start(0.05, now=False)
+        self._looping_call.start(self.READ_INTERVAL, now=False)
 
     def _looping_call_cb(self):
         """
@@ -107,7 +114,7 @@ class Application(object):
             return
         # if the arduino is connected:
 
-        if self._timer.elapsed() >= 1.0:
+        if self._print_timer.elapsed() >= self.READ_INTERVAL:
             # send read
             self.send_read_hands()
 
@@ -119,16 +126,20 @@ class Application(object):
             self._capsule["fan"] = not self._capsule["fan"]
             self.set_fan(self._capsule["fan"])
 
-            print("capsule: %s" % (self._capsule))
-            self._timer.reset()
+            if VERBOSE:
+                print("capsule: %s" % (self._capsule))
+            self._print_timer.reset()
 
 
     def set_hand_connected(self, is_connected):
+        if self._capsule["hands"] != is_connected:
+            print("HANDS: %s" % (is_connected))
         self._capsule["hands"] = is_connected
-        if is_connected:
-            print("hand yes")
-        else:
-            print("hand no")
+        if VERBOSE:
+            if is_connected:
+                print("hand yes")
+            else:
+                print("hand no")
 
     def connection_made_cb(self):
         self._arduino_connected = True
@@ -159,8 +170,10 @@ class Application(object):
 
     def send_to_arduino(self, txt):
         #data = "%s\n" % (txt)
-        print("send %s" % (txt))
+        if VERBOSE:
+            print("send %s" % (txt))
         self._serial.protocol.sendLine(txt) # transport.write(data)
+        #self._serial.protocol.transport.write("%s\n" % (txt)) # transport.write(data)
 
 
 def run():
