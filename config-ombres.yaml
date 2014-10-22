@@ -1,0 +1,12 @@
+# Fichier de configuration!
+
+directory: ~/Videos
+videos:
+  - uri: ombres-1.mov
+    duration: 120.0
+  - uri: ombres-2.mov
+    duration: 120.0
+  - uri: ombres-3.mov
+    duration: 120.0
+  - uri: ombres-4.mov
+    duration: 120.0
