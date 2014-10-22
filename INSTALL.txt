@@ -5,7 +5,10 @@ Ubuntu 14.04
 ------------
 Installer MapMap, branche develop
 
-sudo apt-get install python-yaml python-twisted python-txosc
+  sudo apt-get install python-yaml python-twisted python-txosc
+  sudo usermod -a -G dialout `whoami`
+
+Then, log out and log in again.
 
 
 Deprecated instructions
