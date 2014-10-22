@@ -1,9 +1,9 @@
 #include <Messenger.h>
 
 // Constants: (pins)
-#define MOTOR_OUT 13
+#define MOTOR_OUT 10
 #define FAN_OUT   12
-#define HANDS_IN   3
+#define HANDS_IN  3
 
 // Constants: (baud rate)
 #define BAUD_RATE 115200
@@ -19,6 +19,16 @@
 
 Messenger messenger('\n');
 
+boolean readHands() {
+// Reduces appearance of false positives.
+#define READ_HANDS_N_SAMPLES 1000
+#define READ_HANDS_N_SAMPLES_THRESHOLD 900
+  int sum = 0;
+  for (int i=0; i<READ_HANDS_N_SAMPLES; i++)
+    sum += digitalRead(HANDS_IN) == LOW ? 1 : 0;
+  return (sum > READ_HANDS_N_SAMPLES_THRESHOLD - 100);
+}
+
 // Create the callback function
 void messageReady()
 {
@@ -26,7 +36,6 @@ void messageReady()
   while (messenger.available())
   {
     char c = messenger.readChar();
-    Serial.println(c);
     switch (c)
     {
       case MSG_TYPE_MOTOR_ON:
@@ -44,7 +53,7 @@ void messageReady()
       case MSG_TYPE_READ:
       default :
         // Hands ground the circuit so LOW == ON
-        Serial.println(digitalRead(HANDS_IN) == LOW ? MSG_HANDS_ON : MSG_HANDS_OFF);
+        Serial.println(readHands() ? MSG_HANDS_ON : MSG_HANDS_OFF);
     }
   }
 }
