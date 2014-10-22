@@ -27,36 +27,9 @@ import os
 import sys
 from twisted.internet import reactor
 from twisted.internet import task
-import random
 from txosc import async
 from txosc import osc
-
-class UrnRandom(object):
-    """
-    Pick random numbers from 0 to n - 1, avoiding repetitions.
-    """
-    def __init__(self, size=1):
-        self._size = size
-        self._elements = []
-        self.reset()
-
-    def reset(self):
-        self._elements = range(self._size)
-        random.shuffle(self._elements)
-
-    def pick(self):
-        if self._size == 0:
-            return None
-        if len(self._elements) == 0:
-            self.reset()
-        ret = self._elements[0]
-        self._elements = self._elements[1:] # pop
-        return ret
-
-    def set_size(self, size):
-        self._size = size
-        self.reset()
-
+from libnagadef import urn
 
 class VeeJay(object):
     """
@@ -69,7 +42,7 @@ class VeeJay(object):
         self.configuration = configuration
         self.clips = []
         self._current_cue_index = -1 # Initial non-existing cue
-        self._urn = UrnRandom()
+        self._urn = urn.UrnRandom()
         self._init_urn()
         self._osc_port = 12345
         self._osc_host = "localhost"
