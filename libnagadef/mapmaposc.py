@@ -66,7 +66,7 @@ class MapMapOsc(object):
         self._send_osc(message)
 
     def speed(self, mapping_id, speed_percent):
-        path = "/mapmap/paint/media/speed"
+        path = "/mapmap/paint/media/rate"
         message = osc.Message(path)
         message.add(mapping_id)
         message.add(float(speed_percent))
