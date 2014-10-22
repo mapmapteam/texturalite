@@ -65,3 +65,10 @@ class MapMapOsc(object):
         message = self._create_play_message(mapping_id, filepath)
         self._send_osc(message)
 
+    def speed(self, mapping_id, speed_percent):
+        path = "/mapmap/paint/media/speed"
+        message = osc.Message(path)
+        message.add(mapping_id)
+        message.add(float(speed_percent))
+        self._send_osc(message)
+
