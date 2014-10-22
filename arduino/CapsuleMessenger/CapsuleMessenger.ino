@@ -42,10 +42,9 @@ void messageReady()
         digitalWrite(FAN_OUT, LOW);
         break;
       case MSG_TYPE_READ:
-        Serial.println(digitalRead(HANDS_IN) == HIGH ? MSG_HANDS_ON : MSG_HANDS_OFF);
-        break;
       default :
-        break;
+        // Hands ground the circuit so LOW == ON
+        Serial.println(digitalRead(HANDS_IN) == LOW ? MSG_HANDS_ON : MSG_HANDS_OFF);
     }
   }
 }
