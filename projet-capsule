@@ -173,7 +173,8 @@ class Application(object):
     #     return ret
 
     def _random_in_list(self, the_list):
-        random.shuffle(the_list)[0]
+        random.shuffle(the_list)
+        return the_list[0]
 
     def start_voyage(self):
         self._audioosc.set_volumes(1, 0)
