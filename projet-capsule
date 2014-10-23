@@ -182,7 +182,6 @@ class Application(object):
         if not self._arduino_connected:
             print("Arduino is not connected")
             return
-        
 
         # if the arduino is connected:
 
@@ -202,15 +201,6 @@ class Application(object):
                 self._capsule_speed = 0
 
         print("SPEED: %s" % (self._capsule_speed))
-        #return
-        #
-        #
-        #
-        #
-        #
-
-
-
 
         # IDLE:
         if self._capsule_speed <= 0:
@@ -228,24 +218,23 @@ class Application(object):
                 self._capsule_is_idle = False
 
             #if self._capsule_speed > 40:
-            playback_speed_percent = self._capsule_speed * 2
+            # XXX
+            playback_speed_percent = self._capsule_speed * 8 + 50
             self.send_playback_speed(playback_speed_percent)
             
             if self._capsule_speed >= 100:
                 self.set_fan(True)
             else:
                 self.set_fan(False)
+
+            if self._capsule_speed >= 200:
+                # tilt
+                # boom
+                self._capsule_speed = 0
+                self.start_ombres()
+                self.set_fan(False)
+                self._capsule_is_idle = True
             return
-
-            # # toggle motor
-            # self._capsule["motor"] = not self._capsule["motor"]
-
-            # # toggle fan
-            # self._capsule["fan"] = not self._capsule["fan"]
-
-            # if VERBOSE:
-            #     print("capsule: %s" % (self._capsule))
-            # self._print_timer.reset()
 
     def send_playback_speed(self, playback_speed_percent):
         self._mapmaposc.speed(0, playback_speed_percent)
