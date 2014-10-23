@@ -16,8 +16,8 @@ OSC_PORT = 11111
 N_STATES = 2
 
 SOUND_FILES = [
-    "/home/performance/Music/voyage.wav", 
-    "/home/performance/Music/idle.aif",
+    "/home/performance/Music/capsule-voyage.wav", 
+    "/home/performance/Music/capsule-idle.wav",
     ]
 N_STATES = len(SOUND_FILES)
 
@@ -27,7 +27,7 @@ server = Server(sr=44100, nchnls=2, buffersize=512, duplex=0).boot()
 server.start()
 
 players = [ SfPlayer(SOUND_FILES[i], loop=True, speed=1).play() for i in range(N_STATES) ]
-mixer = Mixer(outs=1, chnls=2, time=0.050)
+mixer = Mixer(outs=1, chnls=2, time=1.0) # XXX pretty long fade time
 for i in range(N_STATES):
     mixer.addInput(i, players[i])
     mixer.setAmp(i, 0, 0) # disable both
