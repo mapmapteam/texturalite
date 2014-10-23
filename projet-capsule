@@ -7,7 +7,9 @@ Date: 2014
 Dependencies: python-twisted python-serial
 """
 import logging
+import random
 import sys
+import os
 import serial
 import time
 from twisted.protocols.basic import LineReceiver
@@ -15,9 +17,13 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.internet.serialport import SerialPort
 from twisted.python import usage
+from libnagadef import mapmaposc
+from libnagadef import urn
 
 #VERBOSE = True
 VERBOSE = False
+MAX_SPEED = 200 # 10 seconds
+MIN_OMBRE_TIME = 5 # seconds
 
 class Timer(object):
     """
@@ -50,6 +56,9 @@ class ArduinoSerialProtocol(LineReceiver):
         self._app = app
 
     def processData(self, data):
+        """
+        handles a single ASCII char received from the arduino.
+        """
         if data == "y":
             self._app.set_hand_connected(True)
         elif data == "n":
@@ -79,15 +88,42 @@ class Application(object):
         Constructor.
         """
         self._serial = None
-        self.READ_INTERVAL = 0.050 # seconds
+        self.READ_INTERVAL = 0.150 # seconds
         self._arduino_connected = False
         self._print_timer = Timer()
+        self._query_timer = Timer()
+        self._ombres_timer = Timer()
+        self._capsule_speed = 0
+        self._capsule_is_idle = True
+
+        self._ombres_videos = [
+            "/home/performance/Videos/ombres-1.mov",
+            "/home/performance/Videos/ombres-2.mov",
+            "/home/performance/Videos/ombres-3.mov",
+            "/home/performance/Videos/ombres-4.mov",
+            ]
+
+        self._voyages_videos = [
+            "/home/performance/Videos/voyage-1.MOV",
+            "/home/performance/Videos/voyage-2.MOV",
+            "/home/performance/Videos/voyage-3.MOV",
+            "/home/performance/Videos/voyage-4.MOV",
+            "/home/performance/Videos/voyage-5.MOV",
+            "/home/performance/Videos/voyage-6.MOV",
+            "/home/performance/Videos/voyage-7.MOV",
+            "/home/performance/Videos/voyage-8.MOV",
+            ]
+
         # Stores the state of the capsule.
         self._capsule = {
             "hands": False,
             "motor": False,
             "fan": False,
             }
+        self._urn = urn.UrnRandom()
+        #self._init_urn()
+        self._mapmaposc = mapmaposc.MapMapOsc(12345, "localhost")
+
         try:
             #logging.debug('About to open port %s' % serial_port)
             if VERBOSE:
@@ -102,7 +138,68 @@ class Application(object):
         if VERBOSE:
             print("start task")
         self._looping_call = task.LoopingCall(self._looping_call_cb)
+        # XXX
         self._looping_call.start(self.READ_INTERVAL, now=False)
+
+    # def _init_urn(self):
+    #     num = len(self.get_cues())
+    #     self._urn.set_size(num)
+
+    # def get_cues(self):
+    #     """
+    #     Returns the list of random clips.
+    #     Homme interagit avec la nature.
+    #     """
+    #     directory = "/home/performance/Videos"
+    #     # XXX Hard-code clips here
+    #     clips = [
+    #         "MVI_1208.MOV",
+    #         "MVI_1212.MOV",
+    #         "MVI_1213.MOV",
+    #         "MVI_1214.MOV",
+    #         "MVI_1217.MOV",
+    #         "MVI_1219.MOV",
+    #         "MVI_1220.MOV",
+    #         "MVI_1224.MOV",
+    #         ]
+    #     ret = []
+    #     for v in clips:
+    #         uri = os.path.join(directory, v)
+    #         if not os.path.exists(uri):
+    #             print("Warning: Video file not found: %s" % (uri))
+    #         ret.append(uri)
+    #     return ret
+
+    def _random_in_list(self, the_list):
+        random.shuffle(the_list)[0]
+
+    def start_voyage(self):
+        self.set_motor(True)
+        self.send_playback_speed(100)
+        mapping_id = 0
+        
+        video = self._random_in_list(self._voyages_videos)
+        self._mapmaposc.play(mapping_id, video)
+
+    def start_ombres(self):
+        self.set_motor(False)
+        self.send_playback_speed(100)
+        mapping_id = 0
+        video = self._random_in_list(self._ombres_videos)
+        self._mapmaposc.play(mapping_id, video)
+        self._ombres_timer.reset()
+
+    # def play_one_clip_voyage(self):
+    #     index = self._urn.pick()
+    #     video_cue = self.get_cues()[index]
+    #     mapping_id = 0
+    #     self._mapmaposc.play(mapping_id, video_cue)
+
+    # def play_clip_idle(self):
+    #     # XXX hard-coded idle clip
+    #     uri = "/home/performance/Videos/MVI_1224.MOV"
+    #     mapping_id = 0
+    #     self._mapmaposc.play(mapping_id, uri)
 
     def _looping_call_cb(self):
         """
@@ -112,34 +209,73 @@ class Application(object):
         if not self._arduino_connected:
             print("Arduino is not connected")
             return
+
         # if the arduino is connected:
 
         if self._print_timer.elapsed() >= self.READ_INTERVAL:
-            # send read
+            # send read (async)
             self.send_read_hands()
 
-            # toggle motor
-            self._capsule["motor"] = not self._capsule["motor"]
-            self.set_motor(self._capsule["motor"])
+        print("HANDS: %s" % (self._capsule["hands"]))
 
-            # toggle fan
-            self._capsule["fan"] = not self._capsule["fan"]
-            self.set_fan(self._capsule["fan"])
+        if self._capsule["hands"]:
+            self._capsule_speed += 1
+            if self._capsule_speed > MAX_SPEED:
+                self._capsule_speed = MAX_SPEED
+        else:
+            self._capsule_speed -= 1
+            if self._capsule_speed < 0:
+                self._capsule_speed = 0
 
-            if VERBOSE:
-                print("capsule: %s" % (self._capsule))
-            self._print_timer.reset()
+        print("SPEED: %s" % (self._capsule_speed))
 
+        # IDLE:
+        if self._capsule_speed <= 0:
+            if not self._capsule_is_idle:
+                self.start_ombres()
+            self._capsule_is_idle = True
+            return
+
+        # VOYAGE:
+        else:
+            if self._capsule_is_idle:
+                if self._ombres_timer.elapsed() < MIN_OMBRE_TIME:
+                    return
+                else:
+                    # start voyage
+                    self.start_voyage()
+                    self._capsule_speed = 20
+                    self._capsule_is_idle = False
+
+            #if self._capsule_speed > 40:
+            # XXX
+            playback_speed_percent = self._capsule_speed * 8 + 50
+            self.send_playback_speed(playback_speed_percent)
+            
+            if self._capsule_speed >= 100:
+                self.set_fan(True)
+            else:
+                self.set_fan(False)
+
+            if self._capsule_speed >= 200:
+                # tilt
+                # boom
+                self._capsule_speed = 0
+                self.start_ombres()
+                self.set_fan(False)
+                self._capsule_is_idle = True
+            return
+
+    def send_playback_speed(self, playback_speed_percent):
+        self._mapmaposc.speed(0, playback_speed_percent)
 
     def set_hand_connected(self, is_connected):
-        if self._capsule["hands"] != is_connected:
-            print("HANDS: %s" % (is_connected))
         self._capsule["hands"] = is_connected
-        if VERBOSE:
-            if is_connected:
-                print("hand yes")
-            else:
-                print("hand no")
+        # if VERBOSE:
+        #     if is_connected:
+        #         print("hand yes")
+        #     else:
+        #         print("hand no")
 
     def connection_made_cb(self):
         self._arduino_connected = True
@@ -151,19 +287,31 @@ class Application(object):
         """
         Turn on or off the motor.
         """
-        if is_enabled:
-            self.send_to_arduino("M")
+        if self._capsule["motor"] == is_enabled:
+            return
         else:
-            self.send_to_arduino("m")
+            print("MOTOR %s" % (is_enabled))
+            self._capsule["motor"] = is_enabled
+
+            if is_enabled:
+                self.send_to_arduino("M")
+            else:
+                self.send_to_arduino("m")
 
     def set_fan(self, is_enabled):
         """
         Turn on or off the fan.
         """
-        if is_enabled:
-            self.send_to_arduino("F")
+        if self._capsule["fan"] == is_enabled:
+            return
         else:
-            self.send_to_arduino("f")
+            print("FAN %s" % (is_enabled))
+            #return
+            self._capsule["fan"] = is_enabled
+            if is_enabled:
+                self.send_to_arduino("F")
+            else:
+                self.send_to_arduino("f")
 
     def send_read_hands(self):
         self.send_to_arduino("R")

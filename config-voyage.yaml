@@ -1,0 +1,20 @@
+# Fichier de configuration!
+
+directory: ~/Videos
+videos:
+  - uri: voyage-1.MOV
+    duration: 120.0
+  - uri: voyage-2.MOV
+    duration: 120.0
+  - uri: voyage-3.MOV
+    duration: 120.0
+  - uri: voyage-4.MOV
+    duration: 120.0
+  - uri: voyage-5.MOV
+    duration: 120.0
+  - uri: voyage-6.MOV
+    duration: 120.0
+  - uri: voyage-7.MOV
+    duration: 120.0
+  - uri: voyage-8.MOV
+    duration: 120.0

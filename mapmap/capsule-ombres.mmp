@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapmap>
+<project version="0.1">
+    <paints>
+        <paint id="0" type="media">
+            <uri>/home/performance/Videos/voyage-1.MOV</uri>
+            <x>360</x>
+            <y>-45</y>
+            <rate>100</rate>
+        </paint>
+    </paints>
+    <mappings>
+        <mapping id="0" paint_id="0" type="mesh_texture" locked="0" solo="0" visible="1">
+            <destination shape="mesh">
+                <dimensions columns="4" rows="4"/>
+                <vertex x="1021" y="308"/>
+                <vertex x="906" y="390"/>
+                <vertex x="791" y="472"/>
+                <vertex x="676" y="554"/>
+                <vertex x="710.667" y="290"/>
+                <vertex x="667.028" y="396.972"/>
+                <vertex x="628.889" y="508.444"/>
+                <vertex x="588" y="617.667"/>
+                <vertex x="400.333" y="272"/>
+                <vertex x="470" y="425"/>
+                <vertex x="498" y="542"/>
+                <vertex x="500" y="681.333"/>
+                <vertex x="90" y="254"/>
+                <vertex x="197.333" y="417.667"/>
+                <vertex x="304.667" y="581.333"/>
+                <vertex x="412" y="745"/>
+            </destination>
+            <source shape="mesh">
+                <dimensions columns="4" rows="4"/>
+                <vertex x="360" y="-45"/>
+                <vertex x="573.333" y="-45"/>
+                <vertex x="786.667" y="-45"/>
+                <vertex x="1000" y="-45"/>
+                <vertex x="360" y="75"/>
+                <vertex x="573.333" y="75"/>
+                <vertex x="786.667" y="75"/>
+                <vertex x="1000" y="75"/>
+                <vertex x="360" y="195"/>
+                <vertex x="573.333" y="195"/>
+                <vertex x="786.667" y="195"/>
+                <vertex x="1000" y="195"/>
+                <vertex x="360" y="315"/>
+                <vertex x="573.333" y="315"/>
+                <vertex x="786.667" y="315"/>
+                <vertex x="1000" y="315"/>
+            </source>
+        </mapping>
+        <mapping id="1" paint_id="0" type="mesh_texture" locked="0" solo="0" visible="1">
+            <destination shape="mesh">
+                <dimensions columns="3" rows="3"/>
+                <vertex x="377" y="18"/>
+                <vertex x="689.5" y="162"/>
+                <vertex x="1002" y="306"/>
+                <vertex x="318.5" y="48"/>
+                <vertex x="511" y="163"/>
+                <vertex x="544.5" y="280"/>
+                <vertex x="260" y="78"/>
+                <vertex x="173.5" y="166"/>
+                <vertex x="87" y="254"/>
+            </destination>
+            <source shape="mesh">
+                <dimensions columns="3" rows="3"/>
+                <vertex x="360" y="-45"/>
+                <vertex x="680" y="-45"/>
+                <vertex x="1000" y="-45"/>
+                <vertex x="360" y="135"/>
+                <vertex x="680" y="135"/>
+                <vertex x="1000" y="135"/>
+                <vertex x="360" y="315"/>
+                <vertex x="680" y="315"/>
+                <vertex x="1000" y="315"/>
+            </source>
+        </mapping>
+    </mappings>
+</project>
