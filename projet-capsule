@@ -31,7 +31,7 @@ STATE_IDLE = 0
 STATE_STARTUP = 1
 STATE_TRAVELLING = 2
 STATE_OUT_OF_GAS = 3
-STATE_CRASHING = 4
+STATE_GLIDING = 4
 
 class RandomOnOff(object):
     """
@@ -143,8 +143,8 @@ class Application(object):
         self._capsule_gas = FULL_TANK_GAS
         self._state = STATE_IDLE
         self._state_timer = Timer()
-        self._random_motor = RandomOnOff(0.5, 0.3)
-        self._random_fan = RandomOnOff(0.5, 0.3)
+        self._random_wobble = RandomOnOff(0.1, 0.1)
+        self._random_wind = RandomOnOff(0.05, 0.005)
 
         self._ombres_videos = [
             os.path.expanduser("~/Videos/ombres-1.mov"),
@@ -239,7 +239,10 @@ class Application(object):
         video = self._random_in_list(self._ombres_videos)
         self._mapmaposc.play(mapping_id, video)
         self._ombres_timer.reset()
-
+    
+    def change_state(self, newState):
+        self._state_timer.reset()
+        self._state = newState
     # def play_one_clip_voyage(self):
     #     index = self._urn.pick()
     #     video_cue = self.get_cues()[index]
@@ -281,11 +284,18 @@ class Application(object):
             if self._capsule_speed > MAX_SPEED:
                 self._capsule_speed = MAX_SPEED
         else:
-            # motor not activated
+            # motor not activated (e because no hands and/or gas)
             enable_motor = False
             # out of gas: speed is constant
-            if self._state != STATE_OUT_OF_GAS:
+            if self._state == STATE_OUT_OF_GAS:
+                pass
+            # gliding: speed increases (!)
+            elif self._state == STATE_GLIDING
+                self._capsule_speed += 1
+            # normal: decrease speed
+            else:
                 self._capsule_speed -= 1
+            # we can't have negative speed
             if self._capsule_speed < 0:
                 self._capsule_speed = 0
         
@@ -299,48 +309,51 @@ class Application(object):
         # Manage state transitions
         if self._state == STATE_IDLE:
             # TODO: add wind in the forest
-            enable_fan = self._random_fan.random()
+            enable_fan = self._random_wind.random()
             # Refill after 10 seconds
             if self._state_timer.elapsed() > 10:
                 self._capsule_gas = FULL_TANK_GAS
             # Enough speed to start
             if self._capsule_speed > 10:
                 self.start_voyage()
-                self._state_timer.reset()
-                self._state = STATE_STARTUP
+                self.change_state(STATE_STARTUP)
                 
         elif self._state == STATE_STARTUP:
             # wobbling motor
-            enable_motor = self._random_motor.random()
+            enable_motor = self._random_wobble.random()
             if self._capsule_speed > 50:
-                self._state_timer.reset()
-                self._state = STATE_TRAVELLING
+                self.change_state(STATE_TRAVELLING)
             
         elif self._state == STATE_TRAVELLING:
             if self._capsule_speed < 30:
                 self.start_ombres()
-                self._state_timer.reset()
-                self._state = STATE_IDLE
+                self.change_state(STATE_IDLE):
             if self._capsule_gas <= 0:
                 self._state_timer.reset()
-                self._state = STATE_OUT_OF_GAS
+                self.change_state(STATE_OUT_OF_GAS)
         
         elif self._state == STATE_OUT_OF_GAS:
             # wobbling motor
-            #enable_motor = self._random_motor.random()
+            enable_motor = self._random_wobble.random()
+            if self._state_timer.elapsed() > 5:
+                self.change_state(STATE_GLIDING)
+            
+        elif self._state == STATE_GLIDING:
+            # wobbling motor
+            #enable_motor = self._random_wobble.random()
             if self._capsule_speed < 30:
                 self.start_ombres()
-                self._state_timer.reset()
-                self._state = STATE_IDLE
-            
+                self.change_state(STATE_IDLE)
+ 
         else:
             print("Unknown state: %s" % (self._state))
 
+        # activate motor and fan (for real!)
         self.set_motor(enable_motor)
         self.set_fan(enable_fan)
         
-        if self._state in [ STATE_TRAVELLING, STATE_OUT_OF_GAS ]:
-            # todo: only do it if we change speed
+        # 
+        if self._state in [ STATE_TRAVELLING, STATE_OUT_OF_GAS, STATE_GLIDING ]:
             playback_speed_percent = self._capsule_speed * 8 + 50
             self.send_playback_speed(playback_speed_percent)
         else:
