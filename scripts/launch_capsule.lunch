@@ -1,6 +1,5 @@
 #!/usr/bin/env lunch
-#add_command("~/src/mapmap/mapmap --file ~/src/texturalite/mapmap/vj.mmp --fullscreen")
-add_command("~/src/texturalite/nagadef ~/src/texturalite/sample_config.yaml")
-add_command("~/src/mapmap/mapmap -f ~/src/texturalite/mapmap/capsule1.mmp")
-add_command("~/src/mapmap/mapmap -f ~/src/texturalite/mapmap/capsule2.mmp", host="perf2")
+add_command("~/src/mapmap/mapmap --fullscreen --file ~/src/texturalite/mapmap/capsule-ombres.mmp")
+add_command("~/src/texturalite/projet-capsule")
+add_command("~/src/texturalite/prototypes/sample-player")
 
