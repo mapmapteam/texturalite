@@ -25,19 +25,57 @@ from libnagadef import audioosc
 VERBOSE = False
 MAX_SPEED = 200 # 10 seconds
 MIN_OMBRE_TIME = 5 # seconds
+FULL_TANK_GAS = 200
 
+STATE_IDLE = 0
+STATE_STARTUP = 1
+STATE_TRAVELLING = 2
+STATE_OUT_OF_GAS = 3
+STATE_CRASHING = 4
+
+class RandomOnOff(object):
+    """
+    Randomly toggles on/off.
+    """
+    def __init__(self, prob_to_on=0.5, prob_to_off=0.5):
+        self._prob_to_on = prob_to_on
+        self._prob_to_off = prob_to_off
+        self._is_on = False
+    
+    def random(self):
+        if self._is_on:
+            self._is_on = random.random() <= self._prob_to_off
+        else:
+            self._is_on = not (random.random() <= self._prob_to_on)
+        return self._is_on
+    
 class Timer(object):
     """
     Returns elapsed time.
     """
     def __init__(self):
         self._started = time.time()
+        self._accumulated = 0
+        self._is_paused = False
 
     def elapsed(self):
-        return time.time() - self._started
+        if self._is_paused:
+            return self._accumulated
+        else:
+            return time.time() - self._started + self._accumulated
 
     def reset(self):
         self._started = time.time()
+        self._accumulated = 0
+        self._is_paused = False
+        
+    def pause(self):
+        self._accumulated = self.elapsed()
+        self._is_paused = True
+        
+    def resume(self):
+        self._started = time.time()
+        self._is_paused = False
 
 
 class CliOptions(usage.Options):
@@ -60,6 +98,7 @@ class ArduinoSerialProtocol(LineReceiver):
         """
         handles a single ASCII char received from the arduino.
         """
+        # XXX careful with false positives
         if data == "y":
             self._app.set_hand_connected(True)
         elif data == "n":
@@ -95,24 +134,28 @@ class Application(object):
         self._query_timer = Timer()
         self._ombres_timer = Timer()
         self._capsule_speed = 0
-        self._capsule_is_idle = True
+        self._capsule_gas = FULL_TANK_GAS
+        self._state = STATE_IDLE
+        self._state_timer = Timer()
+        self._random_motor = RandomOnOff(0.5, 0.3)
+        self._random_fan = RandomOnOff(0.5, 0.3)
 
         self._ombres_videos = [
-            "/home/performance/Videos/ombres-1.mov",
-            "/home/performance/Videos/ombres-2.mov",
-            "/home/performance/Videos/ombres-3.mov",
-            "/home/performance/Videos/ombres-4.mov",
+            os.path.expanduser("~/Videos/ombres-1.mov"),
+            os.path.expanduser("~/Videos/ombres-2.mov"),
+            os.path.expanduser("~/Videos/ombres-3.mov"),
+            os.path.expanduser("~/Videos/ombres-4.mov"),
             ]
 
         self._voyages_videos = [
-            "/home/performance/Videos/voyage-1.MOV",
-            "/home/performance/Videos/voyage-2.MOV",
-            "/home/performance/Videos/voyage-3.MOV",
-            "/home/performance/Videos/voyage-4.MOV",
-            "/home/performance/Videos/voyage-5.MOV",
-            "/home/performance/Videos/voyage-6.MOV",
-            "/home/performance/Videos/voyage-7.MOV",
-            "/home/performance/Videos/voyage-8.MOV",
+            os.path.expanduser("~/Videos/voyage-1.MOV"),
+            os.path.expanduser("~/Videos/voyage-2.MOV"),
+            os.path.expanduser("~/Videos/voyage-3.MOV"),
+            os.path.expanduser("~/Videos/voyage-4.MOV"),
+            os.path.expanduser("~/Videos/voyage-5.MOV"),
+            os.path.expanduser("~/Videos/voyage-6.MOV"),
+            os.path.expanduser("~/Videos/voyage-7.MOV"),
+            os.path.expanduser("~/Videos/voyage-8.MOV"),
             ]
 
         # Stores the state of the capsule.
@@ -178,16 +221,13 @@ class Application(object):
 
     def start_voyage(self):
         self._audioosc.set_volumes(1, 0)
-        self.set_motor(True)
         self.send_playback_speed(100)
-        mapping_id = 0
-        
+        mapping_id = 0        
         video = self._random_in_list(self._voyages_videos)
         self._mapmaposc.play(mapping_id, video)
 
     def start_ombres(self):
         self._audioosc.set_volumes(0, 1)
-        self.set_motor(False)
         self.send_playback_speed(100)
         mapping_id = 0
         video = self._random_in_list(self._ombres_videos)
@@ -222,18 +262,89 @@ class Application(object):
             self.send_read_hands()
 
         print("HANDS: %s" % (self._capsule["hands"]))
-
-        if self._capsule["hands"]:
+        
+        # Manage motor and speed
+        enable_motor = False
+        enable_fan   = False
+        
+        if self._capsule["hands"] and self._capsule_gas > 0:
+            # activate motor (with gas)
+            enable_motor = True
             self._capsule_speed += 1
+            self._capsule_gas -= 1
             if self._capsule_speed > MAX_SPEED:
                 self._capsule_speed = MAX_SPEED
         else:
-            self._capsule_speed -= 1
+            # motor not activated
+            enable_motor = False
+            # out of gas: speed is constant
+            if self._state != STATE_OUT_OF_GAS:
+                self._capsule_speed -= 1
             if self._capsule_speed < 0:
                 self._capsule_speed = 0
+        
+        # speed == wind
+        if self._state != STATE_IDLE:
+            if self._capsule_speed >= 100:
+                enable_fan = True
+            else:
+                enable_fan = True
 
+        # Manage state transitions
+        if self._state == STATE_IDLE:
+            # TODO: add wind in the forest
+            enable_fan = self._random_fan.random()
+            # Refill after 10 seconds
+            if self._state_timer.elapsed() > 10:
+                self._capsule_gas = FULL_TANK_GAS
+            # Enough speed to start
+            if self._capsule_speed > 10:
+                self.start_voyage()
+                self._state_timer.reset()
+                self._state = STATE_STARTUP
+                
+        elif self._state == STATE_STARTUP:
+            # wobbling motor
+            enable_motor = self._random_motor.random()
+            if self._capsule_speed > 50:
+                self._state_timer.reset()
+                self._state = STATE_TRAVELLING
+            
+        elif self._state == STATE_TRAVELLING:
+            if self._capsule_speed < 30:
+                self.start_ombres()
+                self._state_timer.reset()
+                self._state = STATE_IDLE
+            if self._capsule_gas <= 0:
+                self._state_timer.reset()
+                self._state = STATE_OUT_OF_GAS
+        
+        elif self._state == STATE_OUT_OF_GAS:
+            # wobbling motor
+            #enable_motor = self._random_motor.random()
+            if self._capsule_speed < 30:
+                self.start_ombres()
+                self._state_timer.reset()
+                self._state = STATE_IDLE
+            
+        else:
+            print("Unknown state: %s" % (self._state))
+
+        self.set_motor(enable_motor)
+        self.set_fan(enable_fan)
+        
+        if self._state in [ STATE_TRAVELLING, STATE_OUT_OF_GAS ]:
+            # todo: only do it if we change speed
+            playback_speed_percent = self._capsule_speed * 8 + 50
+            self.send_playback_speed(playback_speed_percent)
+        else:
+            self.send_playback_speed(100)
+            
         print("SPEED: %s" % (self._capsule_speed))
-
+        # done
+        
+        # deprecated:
+        """
         # IDLE:
         if self._capsule_speed <= 0:
             if not self._capsule_is_idle:
@@ -270,6 +381,7 @@ class Application(object):
                 self.set_fan(False)
                 self._capsule_is_idle = True
             return
+        """
 
     def send_playback_speed(self, playback_speed_percent):
         self._mapmaposc.speed(0, playback_speed_percent)
@@ -292,31 +404,31 @@ class Application(object):
         """
         Turn on or off the motor.
         """
-        if self._capsule["motor"] == is_enabled:
-            return
-        else:
-            print("MOTOR %s" % (is_enabled))
-            self._capsule["motor"] = is_enabled
+        #if self._capsule["motor"] == is_enabled:
+        #    return
+        #else:
+        print("MOTOR %s" % (is_enabled))
+        self._capsule["motor"] = is_enabled
 
-            if is_enabled:
-                self.send_to_arduino("M")
-            else:
-                self.send_to_arduino("m")
+        if is_enabled:
+            self.send_to_arduino("M")
+        else:
+            self.send_to_arduino("m")
 
     def set_fan(self, is_enabled):
         """
         Turn on or off the fan.
         """
-        if self._capsule["fan"] == is_enabled:
-            return
+        #if self._capsule["fan"] == is_enabled:
+        #    return
+        #else:
+        print("FAN %s" % (is_enabled))
+        #return
+        self._capsule["fan"] = is_enabled
+        if is_enabled:
+            self.send_to_arduino("F")
         else:
-            print("FAN %s" % (is_enabled))
-            #return
-            self._capsule["fan"] = is_enabled
-            if is_enabled:
-                self.send_to_arduino("F")
-            else:
-                self.send_to_arduino("f")
+            self.send_to_arduino("f")
 
     def send_read_hands(self):
         self.send_to_arduino("R")
