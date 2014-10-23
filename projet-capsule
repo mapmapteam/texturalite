@@ -19,6 +19,7 @@ from twisted.internet.serialport import SerialPort
 from twisted.python import usage
 from libnagadef import mapmaposc
 from libnagadef import urn
+from libnagadef import audioosc
 
 #VERBOSE = True
 VERBOSE = False
@@ -123,6 +124,7 @@ class Application(object):
         self._urn = urn.UrnRandom()
         #self._init_urn()
         self._mapmaposc = mapmaposc.MapMapOsc(12345, "localhost")
+        self._audioosc  = audioosc.AudioOsc()
 
         try:
             #logging.debug('About to open port %s' % serial_port)
@@ -174,6 +176,7 @@ class Application(object):
         random.shuffle(the_list)[0]
 
     def start_voyage(self):
+        self._audioosc.set_volumes(1, 0)
         self.set_motor(True)
         self.send_playback_speed(100)
         mapping_id = 0
@@ -182,6 +185,7 @@ class Application(object):
         self._mapmaposc.play(mapping_id, video)
 
     def start_ombres(self):
+        self._audioosc.set_volumes(0, 1)
         self.set_motor(False)
         self.send_playback_speed(100)
         mapping_id = 0
