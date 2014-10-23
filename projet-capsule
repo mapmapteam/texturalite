@@ -246,10 +246,10 @@ class Application(object):
             if self._capsule_is_idle:
                 if self._ombres_timer.elapsed() < MIN_OMBRE_TIME:
                     return
-                else:
+                elif self._capsule_speed > 10:
                     # start voyage
+                    #self._capsule_speed = 0
                     self.start_voyage()
-                    self._capsule_speed = 20
                     self._capsule_is_idle = False
 
             #if self._capsule_speed > 40:
