@@ -93,6 +93,7 @@ class ArduinoSerialProtocol(LineReceiver):
     """
     def __init__(self, app):
         self._app = app
+        self._hand_num_consecutive_positive = 0
 
     def processData(self, data):
         """
@@ -100,9 +101,14 @@ class ArduinoSerialProtocol(LineReceiver):
         """
         # XXX careful with false positives
         if data == "y":
-            self._app.set_hand_connected(True)
+			self._hand_num_consecutive_positive += 1
         elif data == "n":
             self._app.set_hand_connected(False)
+        # this is to help allieviate problems with false positives
+        if self._hand_num_consecutive_positive >= 3
+			self._app.set_hand_connected(True)
+		else:
+			self._app.set_hand_connected(False)
         if VERBOSE:
             print("Received %s" % (data))
 
