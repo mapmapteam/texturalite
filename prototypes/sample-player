@@ -6,6 +6,7 @@ Sound player
 """
 
 from pyo import *
+import os
 
 OSC_ADDRESS_BASE = "/texturalite/sound/"
 OSC_ADDRESS_SPEED = OSC_ADDRESS_BASE + "speed"
@@ -16,8 +17,8 @@ OSC_PORT = 11111
 N_STATES = 2
 
 SOUND_FILES = [
-    "/home/performance/Music/capsule-voyage.wav", 
-    "/home/performance/Music/capsule-idle.wav",
+    os.path.expanduser("~/Music/capsule-voyage.wav"), 
+    os.path.expanduser("~/Music/capsule-idle.wav"),
     ]
 N_STATES = len(SOUND_FILES)
 
@@ -26,8 +27,8 @@ server = Server(sr=44100, nchnls=2, buffersize=512, duplex=0).boot()
 
 server.start()
 
-players = [ SfPlayer(SOUND_FILES[i], loop=True, speed=1).play() for i in range(N_STATES) ]
-mixer = Mixer(outs=1, chnls=2, time=1.0) # XXX pretty long fade time
+players = [ SfPlayer(SOUND_FILES[i], loop=True, speed=1).play() for i in range(N_STATES)]
+mixer = Mixer(outs=1, chnls=2, time=3.0) # XXX pretty long fade time
 for i in range(N_STATES):
     mixer.addInput(i, players[i])
     mixer.setAmp(i, 0, 0) # disable both
