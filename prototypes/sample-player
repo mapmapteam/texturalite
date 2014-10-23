@@ -19,6 +19,7 @@ N_STATES = 2
 SOUND_FILES = [
     os.path.expanduser("~/Music/capsule-voyage.wav"), 
     os.path.expanduser("~/Music/capsule-idle.wav"),
+    os.path.expanduser("~/Music/capsule-crash.wav"),
     ]
 N_STATES = len(SOUND_FILES)
 
@@ -27,11 +28,18 @@ server = Server(sr=44100, nchnls=2, buffersize=512, duplex=0).boot()
 
 server.start()
 
-players = [ SfPlayer(SOUND_FILES[i], loop=True, speed=1).play() for i in range(N_STATES)]
+try:
+    players = [ SfPlayer(SOUND_FILES[i], loop=True, speed=1).play() for i in range(N_STATES)]
+except TypeError, e:
+    print(e)
+    print("XXXXXXXXXXXXXXXXX")
+    print("Do the files really exist?")
+    print("%s" % (SOUND_FILES))
+    print("XXXXXXXXXXXXXXXXX")
 mixer = Mixer(outs=1, chnls=2, time=3.0) # XXX pretty long fade time
 for i in range(N_STATES):
     mixer.addInput(i, players[i])
-    mixer.setAmp(i, 0, 0) # disable both
+    mixer.setAmp(i, 0, 0) # disable all
 
 mixer.out()
 
@@ -49,8 +57,11 @@ oscRecvSpeed.addAddress(OSC_ADDRESS_TERMINATE)
 
 currentFileIndex = 0
 
-while (True):
-    time.sleep(1)
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    pass
 
 #while (True):
 #    time.sleep(5.0)

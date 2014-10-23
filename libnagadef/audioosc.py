@@ -29,17 +29,31 @@ class AudioOsc(object):
         self._client_proto.send(message, (self._osc_host, self._osc_port))
         #print("Sent %s to %s:%d" % (message, self._osc_host, self._osc_port))
 
-    def set_volumes(self, vol_0, vol_1):
-        path = "/texturalite/sound/amp"
-        message0 = osc.Message(path)
-        message0.add(0)
-        message0.add(float(vol_0))
-        self._send_osc(message0)
+    def set_volumes(self, vol_0=1.0, vol_1=0.0, vol_2=0.0):
+        self._fade_sound_id(0, vol_0)
+        self._fade_sound_id(1, vol_1)
+        self._fade_sound_id(2, vol_2)
 
-        message1 = osc.Message(path)
-        message0.add(1)
-        message0.add(float(vol_1))
-        self._send_osc(message1)
+    def _fade_sound_id(self, index, vol):
+        path = "/texturalite/sound/amp"
+        message = osc.Message(path)
+        message.add(index)
+        message.add(float(vol))
+        self._send_osc(message)
+
+    def fade_to_sound_id(self, index):
+        vol_0 = 0.0
+        vol_1 = 0.0
+        vol_2 = 0.0
+        if index == 0:
+            vol_0 = 1.0
+        elif index == 1:
+            vol_1 = 1.0
+        elif index == 2:
+            vol_2 = 1.0
+        self._fade_sound_id(0, vol_0)
+        self._fade_sound_id(1, vol_1)
+        self._fade_sound_id(2, vol_1)
 
     def set_speeds(self, speed0, speed1):
         path = "/texturalite/sound/speed"
