@@ -15,8 +15,10 @@ OSC_ADDRESS_TERMINATE = OSC_ADDRESS_BASE + "terminate"
 OSC_PORT = 11111
 N_STATES = 2
 
-SOUND_FILES = ["./flute.aif", 
-               "./baseballmajeur_m.aif"]
+SOUND_FILES = [
+    "/home/performance/Music/voyage.wav", 
+    "/home/performance/Music/idle.aif",
+    ]
 N_STATES = len(SOUND_FILES)
 
 # Start server
